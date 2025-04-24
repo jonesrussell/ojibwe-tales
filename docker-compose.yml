@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: ojibwe-tales-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./web:/var/www
+    networks:
+      - ojibwe-tales
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ojibwe-tales-backend
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+    networks:
+      - ojibwe-tales
+
+  db:
+    image: postgres:15
+    container_name: ojibwe-tales-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    networks:
+      - ojibwe-tales
+
+  minio:
+    image: minio/minio
+    container_name: ojibwe-tales-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - miniodata:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - ojibwe-tales
+
+networks:
+  ojibwe-tales:
+    driver: bridge
+
+volumes:
+  dbdata:
+  miniodata: 
